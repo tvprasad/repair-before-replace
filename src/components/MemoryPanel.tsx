@@ -5,18 +5,25 @@ function dedupeAndRank(memories: RepairMemory[], currentCategory?: string): {
   entries: RepairMemory[];
   highlightIndex: number;
 } {
-  // Suppress duplicate "pending / Initial assessment" noise — keep only the latest per category+decision combo
-  const seen = new Set<string>();
-  const deduped = memories.filter((m) => {
-    if (m.outcome === "pending" && m.notes === "Initial assessment") {
-      const key = `${m.item_category}-pending`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-    }
-    return true;
-  });
+  // Drop all "pending / Initial assessment" entries — they are auto-generated noise
+  const meaningful = memories.filter(
+    (m) => !(m.outcome === "pending" && m.notes === "Initial assessment")
+  );
 
-  // Sort: same category first, then by date descending
+  // Dedupe by content fingerprint — keep only the most recent of each identical entry
+  // (handles seed script run multiple times or duplicate Backboard records)
+  const fingerprints = new Map<string, RepairMemory>();
+  for (const m of meaningful) {
+    const key = `${m.item_category}|${m.decision}|${m.outcome}|${(m.notes ?? "").slice(0, 60)}`;
+    const existing = fingerprints.get(key);
+    if (!existing || new Date(m.attempt_date) > new Date(existing.attempt_date)) {
+      fingerprints.set(key, m);
+    }
+  }
+
+  const deduped = Array.from(fingerprints.values());
+
+  // Sort: same category first, then date descending
   const sorted = [...deduped].sort((a, b) => {
     const aMatch = currentCategory && a.item_category === currentCategory ? -1 : 0;
     const bMatch = currentCategory && b.item_category === currentCategory ? -1 : 0;
@@ -26,7 +33,7 @@ function dedupeAndRank(memories: RepairMemory[], currentCategory?: string): {
 
   const entries = sorted.slice(0, 5);
 
-  // Highlight the first non-pending entry from the same category — the one most likely used
+  // Highlight the first non-pending same-category entry — most likely referenced by Gemini
   const highlightIndex = entries.findIndex(
     (m) => m.outcome !== "pending" && (!currentCategory || m.item_category === currentCategory)
   );
