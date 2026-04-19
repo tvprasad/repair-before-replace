@@ -53,7 +53,7 @@ export function Assessment() {
             user_preferences: [], 
             outcome: "pending",
             attempt_date: new Date().toISOString(),
-            notes: "Initial assessment"
+            notes: assessment.visible_damage?.slice(0, 120) ?? ""
           });
         }
       } catch (err: any) {
