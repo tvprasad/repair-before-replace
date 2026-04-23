@@ -44,7 +44,7 @@ export function PhotoUpload({ onUpload, onImageSelected }: PhotoUploadProps) {
       />
       {preview ? (
         <div className="relative rounded-2xl overflow-hidden shadow-inner h-72 w-full">
-          <img src={preview} alt="Preview of uploaded item" className="object-contain w-full h-full transition-transform duration-700 group-hover:scale-105" />
+          <img src={preview} alt="Preview of uploaded item" draggable={false} className="object-contain w-full h-full transition-transform duration-700 group-hover:scale-105 select-none pointer-events-none" />
           <div className="absolute inset-0 bg-[#0a0a0a]/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300 backdrop-blur-sm">
             <span className="text-white font-medium flex items-center gap-2 bg-[#141414]/80 px-6 py-3 rounded-full border border-border-subtle">
               <UploadCloud size={20} /> Change Photo
